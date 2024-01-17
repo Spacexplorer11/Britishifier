@@ -277,4 +277,4 @@ client.on('messageCreate', async (message) => {
 });
 
 // Replace 'YOUR_BOT_TOKEN' with your actual bot token
-client.login('MTE5MzE2NzkzMDg1NTI2MDIyMQ.Gd1C5j.1N6YrXcTovJwjT90pYKMgeYRQnfsi_BgTmy_G0');
+client.login('MTE5MzE2NzkzMDg1NTI2MDIyMQ.G9ZnsL.9oDQhXOTZXjjL95BXq8fdEn6q48HZzDPnuIBBU');
