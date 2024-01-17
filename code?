@@ -1,0 +1,280 @@
+const { Client, GatewayIntentBits } = require('discord.js');
+const { Intents } = require('discord.js');
+
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+  ],
+});
+
+function brits(str) {
+  // Replace variations of "isn't it" with "innit"
+  str = str.replace(/ain't it/gi, 'innit');
+  str = str.replace(/isn't it/gi, 'innit');
+  str = str.replace(/aint it/gi, 'innit');
+  str = str.replace(/isnt it/gi, 'innit');
+
+  // Check if "nonsense" already has "bloody" in front
+  const regexNonsense = /bloody\s+nonsense/gi;
+  const hasBloodyNonsense = regexNonsense.test(str);
+
+  // Add "bloody" in front of "nonsense" if not present
+  if (!hasBloodyNonsense) {
+    str = str.replace(/nonsense/gi, 'bloody nonsense');
+  }
+
+  // Check if "hell" already has "bloody" in front
+  const regexHell = /bloody\s+hell/gi;
+  const hasBloodyHell = regexHell.test(str);
+
+  // Add "bloody" in front of "hell" if not present
+  if (!hasBloodyHell) {
+    str = str.replace(/\bhell\b/gi, 'bloody hell');
+  }
+
+  // Turn "british" into "bri'ish"
+  str = str.replace(/ritish/gi, "ri'ish");
+
+  // Turn "coffee" into "tea" (who the heck drinks coffee in Britain?)
+  str = str.replace(/coffee/gi, "tea");
+
+  // You know the typical British gabber
+  str = str.replace(/what/gi, "wot");
+  str = str.replace(/man/gi, "mate");
+  str = str.replace(/bro/gi, "bruv");
+  str = str.replace(/bruh/gi, "bruv");
+  str = str.replace(/\bmom\b/gi, "mum");
+  str = str.replace(/\bmommy\b/gi, "mummy");
+  str = str.replace(/shit/gi, "shite");
+  str = str.replace(/<@1193167930855260221>/gi, "");
+  str = str.replace(/\bhi\b/gi, "oy, mate");
+  str = str.replace(/\bhello\b/gi, "oy, mate");
+  str = str.replace(/stupid/gi, "the definition of stupidity is Ishaan");
+  str = str.replace(/\bur\b/gi,"yer")
+  str = str.replace(/your/gi,"yer")
+  str = str.replace(/\byou\b/gi, "ya");
+  str = str.replace(/absolute braindead/gi, "The definition of absolute braindead is Ishaan");
+  str = str.replace(/troll/gi, "GET RICKROLLED, LOSER");
+  str = str.replace(/t/gi, "\'");
+
+  return str;
+}
+
+const britishJokes = [
+  "I asked the librarian if the library had books on paranoia. 'They're right behind you.'",
+  "Why did the scarecrow win an award? Because he was outstanding in his field!",
+  "I'm reading a book on anti-gravity. It's impossible to put down.",
+  "Why did the bicycle fall over? Because it was two-tired.",
+  "What's a vampire's favorite fruit? A blood orange.",
+  "Why don't skeletons fight each other? They don't have the guts.",
+  "I only know 25 letters of the alphabet, I don't know why.",
+  "I told my computer I needed a break, now it won't stop sending me holiday ads.",
+  "What do you call fake spaghetti? An impasta.",
+  "I used to play piano by ear, but now I use my hands and fingers.",
+  "Parallel lines have so much in common, it's a shame they'll never meet.",
+  "Why did the tomato turn red? Because it saw the salad dressing.",
+  "I used to be a baker because I kneaded dough.",
+  "What do you call a pile of cats? A meowtain.",
+  "I'm on a whiskey diet, I've lost three days already.",
+  "I told my wife she should embrace her mistakes, she gave me a hug."
+];
+const britishRiddles = [
+  "I'm a famous clock in London, standing tall and proud.",
+  "People cross me with caution, yet I'm not a river.",
+  "In Britain, I'm served with tea, often topped with cream and jam.",
+  "I have a royal guard and a famous palace.",
+  "I'm known for my detective skills and reside at 221B Baker Street.",
+  "In castles, you'll find me on the dining table, holding beverages with elegance.",
+  "I'm a red, double-decker mode of transport in London.",
+  "The Queen's home is surrounded by me, a beautiful outdoor space.",
+  "In the UK, I'm a popular dish made with fish and chips.",
+  "I'm a famous bridge in London, often mistaken for a tower.",
+  "People ride me in London to get around the city quickly.",
+  "I'm a mythical creature on the Scottish coat of arms.",
+  "I'm the famous river that flows through the heart of London.",
+  "You'll find me on every street, providing information and directions.",
+  "I'm a traditional Scottish dish made with oats and water.",
+  "I'm a red flower, a symbol of England.",
+  "People in Britain love to have me with their afternoon tea.",
+  "I'm a university city in England with a prestigious history.",
+  "I'm a sport loved by the British, played with a round ball.",
+  "I'm a famous fictional spy with a license to kill.",
+  "In Scotland, I'm a musical instrument often played at events.",
+  "I'm a famous square in London, known for performances and protests.",
+  "I'm the capital city of England, bustling with culture and history.",
+  "I'm a type of hat often associated with Sherlock Holmes.",
+  "You'll find me in the British countryside, hopping around with long ears.",
+  "I'm a famous lake in Scotland, home to a mythical creature.",
+  "I'm a popular British dessert made with layers of sponge, jam, and cream.",
+  "I'm a historic castle in Northern Ireland, perched on a basalt cliff.",
+  "I'm a famous British rock band, known for hits like 'Bohemian Rhapsody.'",
+];
+
+const britishRiddleAnswers = [
+  "Big Ben",
+  "Zebra Crossing",
+  "Scone",
+  "Buckingham Palace",
+  "Sherlock Holmes",
+  "Chalice",
+  "Double-Decker Bus",
+  "Garden",
+  "Fish and Chips",
+  "Tower Bridge",
+  "London Tube",
+  "Unicorn",
+  "Thames",
+  "Street Sign",
+  "Porridge",
+  "Rose",
+  "Crumpet",
+  "Oxford",
+  "Football",
+  "James Bond",
+  "Bagpipes",
+  "Trafalgar Square",
+  "London",
+  "Deerstalker",
+  "Rabbit",
+  "Loch Ness",
+  "Trifle",
+  "Dunluce Castle",
+  "Queen",
+  "Queen",
+];
+
+function joke() {
+  // Get a random index from the array
+  const randomIndex = Math.floor(Math.random() * britishJokes.length);
+
+  // Use the random index to get the random element
+  const randomElement = britishJokes[randomIndex];
+  return randomElement;
+}
+
+async function riddle(message) {
+  return new Promise(async (resolve) => {
+    const randomIndex = Math.floor(Math.random() * britishRiddles.length);
+    const randomElementR = britishRiddles[randomIndex];
+    const randomElementA = britishRiddleAnswers[randomIndex];
+
+    if (message && message.channel) {
+      await message.channel.send(randomElementR);
+
+      let countdown = 20;
+      const countdownInterval = setInterval(() => {
+        if (countdown > 0) {
+          message.channel.send(`Time remaining: ${countdown} seconds`);
+        } else {
+          clearInterval(countdownInterval);
+          resolve({ riddles: randomElementR, answer: randomElementA });
+        }
+        countdown--;
+      }, 1000);
+
+      const filter = (response) => !response.author.bot;
+      const collector = message.channel.createMessageCollector({ filter, time: 20000 });
+
+      collector.on('collect', async (response) => {
+        if (response.content.toLowerCase().trim() === randomElementA.toLowerCase().trim()) {
+          clearInterval(countdownInterval);
+          collector.stop();
+          await message.channel.send(`Correct answer from ${response.author.tag}!`);
+          resolve({ riddles: randomElementR, answer: randomElementA });
+        } else {
+          await message.channel.send(`Wrong answer from ${response.author.tag}.`);
+        }
+      });
+
+      collector.on('end', (collected, reason) => {
+        if (reason === 'time' && !collected.size) {
+          message.channel.send("Time's up! The correct answer is: " + randomElementA);
+          resolve({ riddles: randomElementR, answer: randomElementA });
+        }
+      });
+    }
+  });
+}
+
+client.on('messageCreate', async (message) => {
+  // Ignore messages from the bot itself
+  if (message.author.bot) {
+    return;
+  }
+
+  console.log(`Received message: ${message.content}`);
+
+  // Apply the British English transformations to the message content
+  const transformedContent = brits(message.content);
+
+  if (transformedContent.trim() !== "") {
+    // Check if the transformed content includes a specific word
+    if (transformedContent.includes('Ishaan')) {
+      // Send a video in response
+      try {
+        // Replace 'yourVideoUrl' with the actual URL of the video you want to send
+        await message.channel.send(transformedContent);
+        await message.channel.send('https://tenor.com/JJSB.gif');
+        console.log(`Sent video in response to: ${message.content}`);
+      } catch (error) {
+        console.error('Error sending video:', error);
+      }
+    } else if (transformedContent.includes('RICKROLLED')) {
+      try {
+        await message.channel.send(transformedContent);
+        await message.channel.send('https://tenor.com/oGiMOgYKbHS.gif');
+      } catch (error) {
+        console.error('Error sending video:', error);
+      }
+    } else if (message.content.toLowerCase().includes("joke")) {
+      try {
+        await message.channel.send(joke());
+        console.log(`Sent joke in response to: ${message.content}`);
+      }
+      catch (error) {
+        console.log("Error sending joke:", error);
+      }
+    } else if (message.content.toLowerCase().includes("riddle") && message.content.startsWith("!")) {
+      try {
+        const { riddles, answer } = await riddle(message);
+
+        // The riddle function has already sent the riddle and handled the countdown
+        const answerString = answer;
+        const filter = (response) => response.author.id === message.author.id;
+        const userAnswer = await message.channel.awaitMessages({ filter, max: 1, time: 10000 }); // Wait for 10 seconds
+
+        // Check if the user provided an answer
+        if (userAnswer.size > 0) {
+          const providedAnswer = userAnswer.first().content.toLowerCase().trim();
+          if (providedAnswer === answer.toLowerCase().trim()) {
+            // User provided the correct answer
+            await userAnswer.first().reply({ content: "You got it right!", allowedMentions: { repliedUser: false } });
+          } else {
+            // User provided a wrong answer
+            await userAnswer.first().reply({ content: "Sorry, that's not the correct answer.", allowedMentions: { repliedUser: false } });
+          }
+        } else {
+          // User didn't provide an answer within the time limit
+          await message.reply({ content: "Time's up! The correct answer is: " + answerString, allowedMentions: { repliedUser: false } });
+        }
+      } catch (error) {
+        console.error('Error sending message or riddle:', error);
+      }
+    } else if (message.content !== transformedContent) {
+      // Additional handling if needed
+      try {
+        await message.reply({ content: transformedContent, allowedMentions: { repliedUser: false } });
+        console.log(`Transformed message: ${transformedContent}`);
+      } catch (error) {
+        console.error('Error sending message:', error);
+      }
+    } else {
+      // Additional handling if needed
+    }
+  }
+});
+
+// Replace 'YOUR_BOT_TOKEN' with your actual bot token
+client.login('MTE5MzE2NzkzMDg1NTI2MDIyMQ.Gd1C5j.1N6YrXcTovJwjT90pYKMgeYRQnfsi_BgTmy_G0');
