@@ -1,5 +1,5 @@
-const { Client, GatewayIntentBits, MessageActionRow } = require('discord.js');
-const { MessageButton } = require('discord.js');
+const { Client, GatewayIntentBits } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 
 const client = new Client({
   intents: [
@@ -337,57 +337,9 @@ client.on('messageCreate', async (message) => {
 
   // Apply the British English transformations to the message content
   const transformedContent = brits(message.content);
-
   if (transformedContent.trim() !== "") {
     // Check if the transformed content includes a specific word
-    if (transformedContent.toLowerCase() === '/help') {
-      // Create a row with a button for the user to click
-      const row = new MessageActionRow({
-        components:[
-          new MessageButton ()
-            .setCustomId('help_button')
-            .setLabel('Get Help')
-            .setStyle('PRIMARY'),
-        ],
-      });  
-      // Send a message with the button to the user who typed the command
-      try {
-        const helpMessage = 'Click the button below to get help:';
-        const helpInteractionMessage = await message.reply({
-          content: helpMessage,
-          components: [row],
-          allowedMentions: { repliedUser: false },
-        });
-
-        console.log(`Sent help interaction message in response to /help command to user ${message.author.id}`);
-
-        // Collect the interaction
-        const filter = i => i.customId === 'help_button' && i.user.id === message.author.id;
-        const collector = helpInteractionMessage.createMessageComponentCollector({ filter, time: 15000 });
-
-        collector.on('collect', async i => {
-          // Respond with the help information to the user
-          const responseMessage = 'Here are the available commands:\n\n' +
-            '/help - Display this help message\n' +
-            '/joke - Get a random British joke\n' +
-            '/riddle - Get a random British riddle\n' +
-            '/cute - Get a cute kitten picture';
-
-          await i.update({ content: responseMessage, components: [] });
-
-          console.log(`Sent help message in response to /help command to user ${message.author.id}`);
-        });
-
-        collector.on('end', collected => {
-          if (collected.size === 0) {
-            // Inform the user that the interaction timed out
-            message.author.send('Your help request timed out. Please try again if you need assistance.');
-          }
-        });
-      } catch (error) {
-        console.error('Error sending help interaction message:', error);
-      }
-    } else if (message.content.toLowerCase().includes("!cute")){
+     if (message.content.toLowerCase().includes("!cute")){
         // Send a cute kitten pic in response
         try {
           //Sending the pic

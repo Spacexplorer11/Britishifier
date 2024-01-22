@@ -1,0 +1,14 @@
+const { SlashCommandBuilder } = require('discord.js');
+
+module.exports = {
+	data: new SlashCommandBuilder()
+		.setName('Help')
+		.setDescription('Tells you which commands are available '),
+	async execute(interaction) {
+		await interaction.reply('Here are the available commands:\n\n' +
+        '/help - Display this help message\n' +
+        '/joke - Get a random British joke\n' +
+        '/riddle - Get a random British riddle\n' +
+        '/cute - Get a cute kitten picture');
+	},
+};
