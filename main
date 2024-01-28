@@ -1,5 +1,9 @@
-const { Client, GatewayIntentBits } = require('discord.js');
-const { SlashCommandBuilder } = require('discord.js');
+const { Collection, Events, Client, GatewayIntentBits, ChatInputCommandInteraction } = require('discord.js');
+const { REST, Routes } = require('discord.js');
+const { token } = require('/workspaces/Britishifier/Config.json');
+const fs = require('node:fs');
+const path = require('node:path');
+const deployCommands = require('/workspaces/Britishifier/Deploy-commands.js');
 
 const client = new Client({
   intents: [
@@ -9,24 +13,59 @@ const client = new Client({
   ],
 });
 
+client.commands = new Collection();
+const foldersPath = path.join(__dirname, 'Commands');
+const commandFolders = fs.readdirSync(foldersPath);
+
+for (const folder of commandFolders) {
+	const commandsPath = path.join(foldersPath, folder);
+    // Check if it's a directory before reading its contents
+    if (fs.statSync(commandsPath).isDirectory()) {
+      const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+	for (const file of commandFiles) {
+		const filePath = path.join(commandsPath, file);
+		const command = require(filePath);
+		if ('data' in command && 'execute' in command) {
+			client.commands.set(command.data.name, command);
+		} else {
+			console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+		}
+  }
+ }
+}
+
+const eventsPath = path.join(__dirname, 'Events');
+const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
+
+for (const file of eventFiles) {
+	const filePath = path.join(eventsPath, file);
+	const event = require(filePath);
+	if (event.once) {
+		client.once(event.name, (...args) => event.execute(...args));
+	} else {
+		client.on(event.name, (...args) => event.execute(...args));
+	}
+}
+deployCommands('/workspaces/Britishifier/Commands/Utility');
 function brits(str) {
   const link = /http:\/\//gi;
   const isItALink = link.test(str);
-  //Ignore links
-  if (isItALink){
+  // Ignore links
+  if (isItALink) {
     return str;
   }
-  //If someone wants to kill you or someone else tell them to not
-  str = str.replace(/\bkys\b/gi,"no you");
-  str = str.replace(/keep yourself safe/gi,"no you");
-  str = str.replace(/kill yourself bot/gi,"no you");
-  str = str.replace(/kill yourself/gi,"no you");
-    
+
+  // If someone wants to kill you or someone else, tell them to not
+  str = str.replace(/\bkys\b/gi, "**no you**");
+  str = str.replace(/keep yourself safe/gi, "**no you**");
+  str = str.replace(/kill yourself bot/gi, "**no you**");
+  str = str.replace(/kill yourself/gi, "**no you**");
+
   // Replace variations of "isn't it" with "innit"
-  str = str.replace(/ain't it/gi, 'innit');
-  str = str.replace(/isn't it/gi, 'innit');
-  str = str.replace(/aint it/gi, 'innit');
-  str = str.replace(/isnt it/gi, 'innit');
+  str = str.replace(/ain't it/gi, '**innit**');
+  str = str.replace(/isn't it/gi, '**innit**');
+  str = str.replace(/aint it/gi, '**innit**');
+  str = str.replace(/isnt it/gi, '**innit**');
 
   // Check if "nonsense" already has "bloody" in front
   const regexNonsense = /bloody\s+nonsense/gi;
@@ -34,7 +73,7 @@ function brits(str) {
 
   // Add "bloody" in front of "nonsense" if not present
   if (!hasBloodyNonsense) {
-    str = str.replace(/nonsense/gi, 'bloody nonsense');
+    str = str.replace(/nonsense/gi, '**bloody nonsense**');
   }
 
   // Check if "hell" already has "bloody" in front
@@ -43,288 +82,48 @@ function brits(str) {
 
   // Add "bloody" in front of "hell" if not present
   if (!hasBloodyHell) {
-    str = str.replace(/\bhell\b/gi, 'bloody hell');
+    str = str.replace(/\bhell\b/gi, '**bloody hell**');
   }
-// Check if "hell" already has "bloody" in front
-const regexPiss = /bloody\s+hell/gi;
-const hasBloodyPiss = regexHell.test(str);
 
-// Add "bloody" in front of "piss" if not present
-if (!hasBloodyPiss) {
-  str = str.replace(/\bhell\b/gi, 'bloody piss');
-}
+  // Check if "piss" already has "bloody" in front
+  const regexPiss = /bloody\s+piss/gi;
+  const hasBloodyPiss = regexPiss.test(str);
+
+  // Add "bloody" in front of "piss" if not present
+  if (!hasBloodyPiss) {
+    str = str.replace(/\bpiss\b/gi, '**bloody piss**');
+  }
 
   // Turn "british" into "bri'ish"
-  str = str.replace(/ritish/gi, "ri'ish");
+  str = str.replace(/ritish/gi, "**ri'ish**");
 
   // Turn "coffee" into "tea" (who the heck drinks coffee in Britain?)
-  str = str.replace(/coffee/gi, "tea");
+  str = str.replace(/coffee/gi, "**tea**");
+
+  // Turn "soccer" into "football" because soccer is a disgrace in Britain
+  str = str.replace(/soccer/gi,"**football**");
 
   // You know the typical British gabber
-  str = str.replace(/what/gi, "wot");
-  str = str.replace(/man/gi, "mate");
-  str = str.replace(/bro/gi, "bruv");
-  str = str.replace(/bruh/gi, "bruv");
-  str = str.replace(/\bmom\b/gi, "mum");
-  str = str.replace(/\bmommy\b/gi, "mummy");
-  str = str.replace(/shit/gi, "shite");
-  str = str.replace(/<@1193167930855260221>/gi, "");
-  str = str.replace(/\bhi\b/gi, "oy, mate");
-  str = str.replace(/\bhello\b/gi, "oy, mate");
-  str = str.replace(/stupid/gi, "the definition of stupidity is Ishaan");
-  str = str.replace(/\bur\b/gi,"yer")
-  str = str.replace(/your/gi,"yer")
-  str = str.replace(/\byou\b/gi, "ya");
-  str = str.replace(/absolute braindead/gi, "The definition of absolute braindead is Ishaan");
-  str = str.replace(/troll/gi, "GET RICKROLLED, LOSER");
-  str = str.replace(/bot is bad/gi, "No, this is an awesome bot and you have to change your trash opinion, also, \n GET RICKROLLED, LOSER!!!")
+  str = str.replace(/what/gi, "**wot**");
+  str = str.replace(/\bman\b/gi, "**mate**");
+  str = str.replace(/bro/gi, "**bruv**");
+  str = str.replace(/bruh/gi, "**bruv**");
+  str = str.replace(/\bmom\b/gi, "**mum**");
+  str = str.replace(/\bmommy\b/gi, "**mummy**");
+  str = str.replace(/shit/gi, "**shite**");
+  str = str.replace(/<@1193167930855260221>/gi, "Did you @mention me?");
+  str = str.replace(/\bhi\b/gi, "**oy, mate**");
+  str = str.replace(/\bhello\b/gi, "**oy, mate**");
+  str = str.replace(/stupid/gi, "**the definition of stupidity is Ishaan**");
+  str = str.replace(/\bur\b/gi, "**yer**");
+  str = str.replace(/your/gi, "**yer**");
+  str = str.replace(/\byou\b/gi, "**ya**");
+  str = str.replace(/absolute braindead/gi, "**The definition of absolute braindead is Ishaan**");
+  str = str.replace(/troll/gi, "**GET RICKROLLED, LOSER**");
+  str = str.replace(/bot is bad/gi, "**No, this is an awesome bot and you have to change your trash opinion, also, \n GET RICKROLLED, LOSER!!!**");
   str = str.replace(/t/gi, "\'");
-  str = str.replace(/<@1193167930855260221>/gi, "me")
 
   return str;
-}
-
-const britishJokes = [
-  "I asked the librarian if the library had books on paranoia. 'They're right behind you.'",
-  "Why did the scarecrow win an award? Because he was outstanding in his field!",
-  "I'm reading a book on anti-gravity. It's impossible to put down.",
-  "Why did the bicycle fall over? Because it was two-tired.",
-  "What's a vampire's favorite fruit? A blood orange.",
-  "Why don't skeletons fight each other? They don't have the guts.",
-  "I only know 25 letters of the alphabet, I don't know why.",
-  "I told my computer I needed a break, now it won't stop sending me holiday ads.",
-  "What do you call fake spaghetti? An impasta.",
-  "I used to play piano by ear, but now I use my hands and fingers.",
-  "Parallel lines have so much in common, it's a shame they'll never meet.",
-  "Why did the tomato turn red? Because it saw the salad dressing.",
-  "I used to be a baker because I kneaded dough.",
-  "What do you call a pile of cats? A meowtain.",
-  "I'm on a whiskey diet, I've lost three days already.",
-  "I told my wife she should embrace her mistakes, she gave me a hug."
-];
-const britishRiddles = [
-  "I'm a famous clock in London, standing tall and proud.",
-  "People cross me with caution, yet I'm not a river.",
-  "In Britain, I'm served with tea, often topped with cream and jam.",
-  "I have a royal guard and a famous palace.",
-  "I'm known for my detective skills and reside at 221B Baker Street.",
-  "In castles, you'll find me on the dining table, holding beverages with elegance.",
-  "I'm a red, double-decker mode of transport in London.",
-  "The Queen's home is surrounded by me, a beautiful outdoor space.",
-  "In the UK, I'm a popular dish made with fish and chips.",
-  "I'm a famous bridge in London, often mistaken for a tower.",
-  "People ride me in London to get around the city quickly.",
-  "I'm a mythical creature on the Scottish coat of arms.",
-  "I'm the famous river that flows through the heart of London.",
-  "You'll find me on every street, providing information and directions.",
-  "I'm a traditional Scottish dish made with oats and water.",
-  "I'm a red flower, a symbol of England.",
-  "People in Britain love to have me with their afternoon tea.",
-  "I'm a university city in England with a prestigious history.",
-  "I'm a sport loved by the British, played with a round ball.",
-  "I'm a famous fictional spy with a license to kill.",
-  "In Scotland, I'm a musical instrument often played at events.",
-  "I'm a famous square in London, known for performances and protests.",
-  "I'm the capital city of England, bustling with culture and history.",
-  "I'm a type of hat often associated with Sherlock Holmes.",
-  "You'll find me in the British countryside, hopping around with long ears.",
-  "I'm a famous lake in Scotland, home to a mythical creature.",
-  "I'm a popular British dessert made with layers of sponge, jam, and cream.",
-  "I'm a historic castle in Northern Ireland, perched on a basalt cliff.",
-  "I'm a famous British rock band, known for hits like 'Bohemian Rhapsody.'",
-];
-
-const britishRiddleAnswers = [
-  "Big Ben",
-  "Zebra Crossing",
-  "Scone",
-  "Buckingham Palace",
-  "Sherlock Holmes",
-  "Chalice",
-  "Double-Decker Bus",
-  "Garden",
-  "Fish and Chips",
-  "Tower Bridge",
-  "London Tube",
-  "Unicorn",
-  "Thames",
-  "Street Sign",
-  "Porridge",
-  "Rose",
-  "Crumpet",
-  "Oxford",
-  "Football",
-  "James Bond",
-  "Bagpipes",
-  "Trafalgar Square",
-  "London",
-  "Deerstalker",
-  "Rabbit",
-  "Loch Ness",
-  "Trifle",
-  "Dunluce Castle",
-  "Queen",
-  "Queen",
-];
-
-const cuteKittenPics =[
-  "https://media.gettyimages.com/id/1421837158/photo/fluffy-red-kitten-with-blue-eyes.jpg?s=612x612&w=0&k=20&c=DwVanJ2shYrvjrPP6bjitKkOGuletJ45cMwLQU8qBXM=",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-1250677517.jpg?fit=700,700",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-138468381-scaled-e1619028416767.jpg?fit=700,700",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-10100201-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-146242247-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-146242247-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-979081604-scaled-e1619015683323.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-552105001-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-540542926-scaled-e1619016093503.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-1271172807.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-1203033096-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-936542938-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-1199241887-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-1097609756-e1619016921841.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-540444329.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-85123446-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-671211062-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-sb10061939i-001.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-510428711.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-10184996-scaled-e1619020676597.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-167792988-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-200396789-001-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-987491478-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-1293973214.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-1296443787.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-145679137-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-1225161230-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-610742722-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-707551235.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-1072297938-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-1210629577-scaled-e1619022724981.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-463267555-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-1196955182-scaled-e1619022923705.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-170031582-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-879497264-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-1150883751-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-1301027883-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-1283823314-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-1234957668-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-907415290-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-1272381151-1-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-998829786-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-820787670-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-955480082-scaled.jpg?fit=335,335",
-  "https://www.rd.com/wp-content/uploads/2021/04/GettyImages-936176546-1.jpg?fit=335,335",
-  "https://media.gettyimages.com/id/955480082/photo/two-kittens-in-a-domestic-environment.jpg?s=612x612&w=0&k=20&c=4qWUE-LgM_WFirv3-w4l-lzr8ohtJQ3IA5dUbgvi1dY=",
-  "https://media.gettyimages.com/id/121982182/photo/kitten-licking-its-lips.jpg?s=612x612&w=0&k=20&c=Mev1ogJmdyhKTe1zdUsi8pe9BzbFpKocwM3y971IURM=",
-  "https://media.gettyimages.com/id/187144066/photo/munchkin-pets.jpg?s=612x612&w=0&k=20&c=OqnFPMGkEPwG94hu_8MLqTfFY_jJvN8Vmmv8Sb8mjpQ=",
-  "https://media.gettyimages.com/id/1349412483/photo/fluffy-red-kitten-looking-at-camera.jpg?s=612x612&w=0&k=20&c=cvuzxZCmyBXxZza7L-KDAQmeZrxINVYSKBFKjQLvYjM=",
-  "https://media.gettyimages.com/id/1490576202/photo/purebred-scottish-straight-golden-shaded-chinchilla-kitten-sleeping-lying-on-back-on-a-white.jpg?s=612x612&w=0&k=20&c=Nw5j87hHJr7qFfqzbjwdMh2prsUGpn62zIvNazJ7bF8=",
-  "https://media.gettyimages.com/id/1138179540/photo/funny-kittens.jpg?s=612x612&w=0&k=20&c=hH6OUqVIo5oLI-rEe-5TCvpnaGFaTON9HtCSmIfuPgI=",
-  "https://media.gettyimages.com/id/1309487298/photo/human-cat-relationship.jpg?s=612x612&w=0&k=20&c=K2PywxAB_shHQ1X30AeiYW_xR19l8abB5SxYiwlkbyU=",
-  "https://media.gettyimages.com/id/1199242002/photo/kitten-looking-up-towards-the-camera.jpg?s=612x612&w=0&k=20&c=AQF0-o74K-DSpKeGhnfM3vyi1tZMMVIgS7W_3TQiUbU=",
-  "https://media.gettyimages.com/id/1178098244/photo/cat-on-a-bed-and-feet-of-a-person.jpg?s=612x612&w=0&k=20&c=GXl32UstQbGxZHzjnAFDisbDUIL-DJ7unxQhSgJrTpg=",
-  "https://media.gettyimages.com/id/1127317526/photo/scottish-fold-playing.jpg?s=612x612&w=0&k=20&c=0geqmDLq1URxg7zgCwwcPpq_KyRIXcFGIUv19xBR8kw=",
-  "https://media.gettyimages.com/id/868495272/photo/ginger-kitten.jpg?s=612x612&w=0&k=20&c=7k7X3HAcTwwKAgdd5B-rcIiOJIp7kJDYQK_z4ws4H_U=",
-  "https://media.gettyimages.com/id/71919616/photo/kitten-and-puppy-on-lawn.jpg?s=612x612&w=0&k=20&c=D_Lm87Qsuq1bZD7edmWabYaed5PzOGjTyqjojxdSfi0=",
-  "https://media.gettyimages.com/id/1342433338/photo/black-cat-posing-in-colorful-geometry-shapes.jpg?s=612x612&w=0&k=20&c=AqUceWHdwDM9NV9iUPYAHsBG0NAe4VIhzZ6iX0bReok=",
-  "https://th.bing.com/th/id/OIP.gKch8FvT3TtMwNqi8atXEwHaJ6?w=185&h=248&c=7&r=0&o=5&dpr=2&pid=1.7",
-  "https://th.bing.com/th/id/OIP.9RHXB-YnpZz7J1tjr8XMjwHaHa?w=185&h=186&c=7&r=0&o=5&dpr=2&pid=1.7",
-  "https://th.bing.com/th/id/OIP.YHnjXZY0RcnUwYhMzp6ghwHaI8?w=186&h=225&c=7&r=0&o=5&dpr=2&pid=1.7",
-  "https://th.bing.com/th/id/OIP.Ur7Vx6BLwmQTYtSHUPVKeAHaJ2?w=186&h=248&c=7&r=0&o=5&dpr=2&pid=1.7",
-  "https://th.bing.com/th/id/OIP.979x6oo32CCwgLaCAjjhCwHaLR?w=186&h=284&c=7&r=0&o=5&dpr=2&pid=1.7",
-  "https://th.bing.com/th/id/OIP._H_kMZuxODXOVnfaUsZvMwHaKG?w=186&h=254&c=7&r=0&o=5&dpr=2&pid=1.7",
-  "https://th.bing.com/th/id/OIP.K3TV_1KVr-3Nur9KLuMeWgHaE7?w=186&h=123&c=7&r=0&o=5&dpr=2&pid=1.7",
-  "https://th.bing.com/th/id/OIP.tq89BOxcG3eaLclRcb9IaQHaFw?w=186&h=145&c=7&r=0&o=5&dpr=2&pid=1.7",
-  
-]
-const historyKitten = [];
-const historyJoke = [];
-const historyRiddle = [];
-function cuteKitten(){
-   // Get a random index from the array
-   const randomIndex = Math.floor(Math.random() * cuteKittenPics.length);
-   // Use the random index to get the random element
-   const randomElement = cuteKittenPics[randomIndex];
-   if (historyKitten.length > 4) {
-    historyKitten.splice(4,1);
-    console.log("Removed element from historyKitten")
-  } 
-   if (historyKitten.includes(randomElement)){
-     return cuteKitten();
-   } else {
-    historyKitten.unshift(randomElement);
-    return randomElement;
-   }
-}
-function joke() {
-  // Get a random index from the array
-  const randomIndex = Math.floor(Math.random() * britishJokes.length);
-
-  // Use the random index to get the random element
-  const randomElement = britishJokes[randomIndex];
-  if (historyJoke.length > 4) {
-    historyJoke.splice(4,1);
-    console.log("Removed element from historyJoke")
-  } 
-  if (historyJoke.includes(randomElement)){
-    return joke();
-  } else {
-    historyJoke.unshift(randomElement);
-   return randomElement;
-  }
-}
-
-async function riddle(message) {
-  return new Promise(async (resolve) => {
-    const randomIndex = Math.floor(Math.random() * britishRiddles.length);
-    const randomElementR = britishRiddles[randomIndex];
-    const randomElementA = britishRiddleAnswers[randomIndex];
-    if (historyRiddle.length > 4) {
-      historyRiddle.splice(4,1);
-      console.log("Removed element from historyRiddle")
-    } 
-    if (historyRiddle.includes(randomIndex)){
-      return riddle();
-    } else {
-      historyRiddle.unshift(randomIndex);
-    if (message && message.channel) {
-      await message.channel.send(randomElementR);
-
-      let countdown = 20;
-      const countdownInterval = setInterval(() => {
-        if (countdown > 1) {
-          message.channel.send(`Time remaining: ${countdown} seconds`);
-        } else if(countdown === 1) {
-          message.channel.send(`Time remaining: ${countdown} second`);
-        }else {
-          clearInterval(countdownInterval);
-          resolve({ riddles: randomElementR, answer: randomElementA });
-        }
-        countdown--;
-      }, 1000);
-
-      const filter = (response) => !response.author.bot;
-      const collector = message.channel.createMessageCollector({ filter, time: 20000 });
-
-      collector.on('collect', async (response) => {
-        if (response.content.toLowerCase().trim() === randomElementA.toLowerCase().trim()) {
-          clearInterval(countdownInterval);
-          collector.stop();
-          await message.channel.send(`Correct answer from ${response.author.tag}!`);
-          resolve({ riddles: randomElementR, answer: randomElementA });
-        } else {
-          await message.channel.send(`Wrong answer from ${response.author.tag}.`);
-        }
-      });
-
-      collector.on('end', (collected, reason) => {
-        if (reason === 'time' && !collected.size) {
-          message.channel.send("Time's up! The correct answer is: " + randomElementA);
-          resolve({ riddles: randomElementR, answer: randomElementA });
-        }
-      });
-    }
-  }
-  });
 }
 
 client.on('messageCreate', async (message) => {
@@ -339,18 +138,7 @@ client.on('messageCreate', async (message) => {
   const transformedContent = brits(message.content);
   if (transformedContent.trim() !== "") {
     // Check if the transformed content includes a specific word
-     if (message.content.toLowerCase().includes("!cute")){
-        // Send a cute kitten pic in response
-        try {
-          //Sending the pic
-          await message.reply({ content: "Super duper cuteness coming right up: ", allowedMentions: { repliedUser: false } });
-          await message.channel.send(cuteKitten());
-          console.log(`Sent cute kitten in response to: ${message.content}`);
-        } catch (error) {
-          console.error('Error sending cute kitten:', error);
-        }
-    } 
-    else if(message.content.toLowerCase().includes("burger")|| message.content.toLowerCase().includes("cheeseburger")) {
+      if(message.content.toLowerCase().includes("burger")|| message.content.toLowerCase().includes("cheeseburger")) {
         try {
         await message.reply({content: "https://youtube.com/shorts/qfYHiDyxm1I?si=DzjE1LNg_LNFqQju", allowedMentions:{repliedUser: false }});
         console.log("Sent the funny video in response to \"burger\" or \"cheeseburger\"" )
@@ -371,45 +159,11 @@ client.on('messageCreate', async (message) => {
     } else if (transformedContent.includes('RICKROLLED')) {
       try {
         await message.channel.send(transformedContent);
-        await message.channel.send('https://tenor.com/oGiMOgYKbHS.gif');
+        await message.channel.send('https://tenor.com/oGiMOgYKbHS.gif' + '\n https://www.youtube.com/watch?v=dQw4w9WgXcQ');
       } catch (error) {
         console.error('Error sending video:', error);
       }
-    } else if (message.content.toLowerCase().includes("!joke")) {
-      try {
-        await message.channel.send(joke());
-        console.log(`Sent joke in response to: ${message.content}`);
-      }
-      catch (error) {
-        console.log("Error sending joke:", error);
-      }
-  } else if (message.content.toLowerCase().includes("!riddle")) {
-      try {
-        const { riddles, answer } = await riddle(message);
-
-        // The riddle function has already sent the riddle and handled the countdown
-        const answerString = answer;
-        const filter = (response) => response.author.id === message.author.id;
-        const userAnswer = await message.channel.awaitMessages({ filter, max: 1, time: 10000 }); // Wait for 10 seconds
-
-        // Check if the user provided an answer
-        if (userAnswer.size > 0) {
-          const providedAnswer = userAnswer.first().content.toLowerCase().trim();
-          if (providedAnswer === answer.toLowerCase().trim()) {
-            // User provided the correct answer
-            await userAnswer.first().reply({ content: "You got it right!", allowedMentions: { repliedUser: false } });
-          } else {
-            // User provided a wrong answer
-            await userAnswer.first().reply({ content: "Sorry, that's not the correct answer.", allowedMentions: { repliedUser: false } });
-          }
-        } else {
-          // User didn't provide an answer within the time limit
-          await message.reply({ content: "Time's up! The correct answer is: " + answerString, allowedMentions: { repliedUser: false } });
-        }
-      } catch (error) {
-        console.error('Error sending message or riddle:', error);
-      }
-    } else if (message.content !== transformedContent) {
+    }  else if (message.content !== transformedContent) {
       // Additional handling if needed
       try {
         await message.reply({ content: transformedContent, allowedMentions: { repliedUser: false } });
@@ -424,4 +178,4 @@ client.on('messageCreate', async (message) => {
 });
 
 // Replace 'YOUR_BOT_TOKEN' with your actual bot token
-client.login('MTE5MzE2NzkzMDg1NTI2MDIyMQ.G9ZnsL.9oDQhXOTZXjjL95BXq8fdEn6q48HZzDPnuIBBU');
+client.login(token);
