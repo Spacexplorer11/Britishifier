@@ -1,42 +1,46 @@
-const { SlashCommandBuilder } = require('discord.js');
 const axios = require('axios');
-const cheerio = require('cheerio');
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
 async function fetchDailyQuote() {
-    const jsFeedUrl = 'https://www.brainyquote.com/link/quotebr.js';
+    const quotableApiUrl = 'https://api.quotable.io/random';
 
     try {
-        // Fetch the JavaScript feed content
-        const response = await axios.get(jsFeedUrl);
+        // Fetch a random quote from the Quotable API
+        const response = await axios.get(quotableApiUrl);
 
-        // Load the HTML content into Cheerio
-        const $ = cheerio.load(response.data);
-
-        // Extract the quote from the relevant HTML element
-        const quote = $('.bqQuoteLink').text().trim();
+        // Extract the quote from the API response
+        const quote = response.data.content;
 
         if (quote) {
             return quote;
         } else {
-            throw new Error('Unable to extract quote from the JavaScript feed.');
+            throw new Error('Unable to fetch a quote from the API.');
         }
     } catch (error) {
-        console.error('Error fetching BrainyQuote quote:', error);
-        throw new Error('Error fetching BrainyQuote quote.');
+        console.error('Error fetching quote:', error);
+        throw new Error('Error fetching quote.');
+    }
+}
+
+const data = new SlashCommandBuilder()
+    .setName('quote')
+    .setDescription('Tells you a random quote');
+
+async function execute(interaction) {
+    try {
+        const quote = await fetchDailyQuote();
+
+        // Send a formatted message to Discord
+        await interaction.reply(`The random quote is: \n${quote}`);
+    } catch (error) {
+        console.error('Error executing quote command:', error);
+
+        // Send an error message to Discord
+        await interaction.reply('An error occurred while executing the command.');
     }
 }
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('daily-quote')
-        .setDescription('Tells you the quote of the day'),
-    async execute(interaction) {
-        try {
-            const quote = await fetchDailyQuote();
-            await interaction.reply(`The quote of the day is: \n${quote}`);
-        } catch (error) {
-            console.error(error);
-            await interaction.reply('An error occurred while executing the command.');
-        }
-    },
+    data,
+    execute,
 };

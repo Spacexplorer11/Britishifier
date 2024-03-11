@@ -1,5 +1,7 @@
-const { Collection, Events, Client, GatewayIntentBits, ChatInputCommandInteraction } = require('discord.js');
-const { REST, Routes } = require('discord.js');
+//This bot is based off of code found in https://discord.com/channels/603970300668805120/1120579566549860433
+//This bot was further developed by spacexplorer11, his ID is: 1168126408808202273 
+
+const { Collection, Client, GatewayIntentBits } = require('discord.js');
 const { token } = require('/workspaces/Britishifier/Config.json');
 const fs = require('node:fs');
 const path = require('node:path');

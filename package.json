@@ -4,6 +4,8 @@
     "cheerio": "^1.0.0-rc.12",
     "discord.js": "^14.14.1",
     "dotenv": "^16.3.2",
-    "node-fetch": "^2.7.0"
+    "he": "^1.2.0",
+    "node-fetch": "^2.7.0",
+    "xml2js": "^0.6.2"
   }
 }
