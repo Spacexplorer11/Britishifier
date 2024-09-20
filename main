@@ -1,6 +1,8 @@
 //This bot is based off of code found in https://discord.com/channels/603970300668805120/1120579566549860433
 //This bot was further developed by spacexplorer11, his ID is: 1168126408808202273 
 
+import { Client, GatewayIntentBits, Collection } from 'discord.js';
+
 const { Collection, Client, GatewayIntentBits } = require('discord.js');
 const { token } = require('/workspaces/Britishifier/Config.json');
 const fs = require('node:fs');
@@ -20,6 +22,48 @@ const foldersPath = path.join(__dirname, 'Commands');
 const commandFolders = fs.readdirSync(foldersPath);
 
 for (const folder of commandFolders) {
+  const commandsPath = path.join(foldersPath, folder);
+  if (fs.statSync(commandsPath).isDirectory()) {
+    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+    for (const file of commandFiles) {
+      const filePath = path.join(commandsPath, file);
+      const command = require(filePath);
+      if ('data' in command && 'execute' in command) {
+        client.commands.set(command.data.name, command);
+      } else {
+        console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+      }
+    }
+  }
+}
+
+const eventsPath = path.join(__dirname, 'Events');
+const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
+
+for (const file of eventFiles) {
+  const filePath = path.join(eventsPath, file);
+  const event = require(filePath);
+  if (event.once) {
+    client.once(event.name, (...args) => event.execute(...args));
+  } else {
+    client.on(event.name, (...args) => event.execute(...args));
+  }
+}
+
+let webhook;
+
+client.on('ready', async () => {
+  const channel = client.channels.cache.get('YOUR_CHANNEL_ID'); // Replace with your channel ID
+  if (channel) {
+    webhook = await channel.createWebhook({
+      name: message.author.username,
+      avatar: message.author.avatarURL, // Replace with your desired avatar URL
+    });
+    console.log(`Created webhook ${webhook}`);
+  }
+});
+
+for (const folder of commandFolders) {
 	const commandsPath = path.join(foldersPath, folder);
     // Check if it's a directory before reading its contents
     if (fs.statSync(commandsPath).isDirectory()) {
@@ -35,9 +79,6 @@ for (const folder of commandFolders) {
   }
  }
 }
-
-const eventsPath = path.join(__dirname, 'Events');
-const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 
 for (const file of eventFiles) {
 	const filePath = path.join(eventsPath, file);
@@ -58,10 +99,10 @@ function brits(str) {
   }
 
   // If someone wants to kill you or someone else, tell them to not
-  str = str.replace(/\bkys\b/gi, "**no you**");
-  str = str.replace(/keep yourself safe/gi, "**no you**");
-  str = str.replace(/kill yourself bot/gi, "**no you**");
-  str = str.replace(/kill yourself/gi, "**no you**");
+  str = str.replace(/\bkys\b/gi, "**no, you**");
+  str = str.replace(/keep yourself safe/gi, "**no, you**");
+  str = str.replace(/kill yourself bot/gi, "**no, you**");
+  str = str.replace(/kill yourself/gi, "**no, you**");
 
   // Replace variations of "isn't it" with "innit"
   str = str.replace(/ain't it/gi, '**innit**');
@@ -139,45 +180,50 @@ client.on('messageCreate', async (message) => {
   // Apply the British English transformations to the message content
   const transformedContent = brits(message.content);
   if (transformedContent.trim() !== "") {
-    // Check if the transformed content includes a specific word
-      if(message.content.toLowerCase().includes("burger")|| message.content.toLowerCase().includes("cheeseburger")) {
-        try {
-        await message.reply({content: "https://youtube.com/shorts/qfYHiDyxm1I?si=DzjE1LNg_LNFqQju", allowedMentions:{repliedUser: false }});
-        console.log("Sent the funny video in response to \"burger\" or \"cheeseburger\"" )
-        } catch(error) {
-          console.log("Error sending the funny video in response to \"burger\" or \"cheeseburger\"")
-        }
-    }
-    else if (transformedContent.includes('Ishaan')) {
-      // Send a video in response
-      try {
-        // Replace 'yourVideoUrl' with the actual URL of the video you want to send
-        await message.channel.send(transformedContent);
-        await message.channel.send('https://tenor.com/JJSB.gif');
+    try {
+      if (message.content.toLowerCase().includes("burger") || message.content.toLowerCase().includes("cheeseburger")) {
+        await webhook.send({
+          content: "https://youtube.com/shorts/qfYHiDyxm1I?si=DzjE1LNg_LNFqQju",
+          username: message.author.username,
+          avatarURL: message.author.displayAvatarURL({ dynamic: true }),
+        });
+        console.log("Sent the funny video in response to \"burger\" or \"cheeseburger\"");
+      } else if (transformedContent.includes('Ishaan')) {
+        await webhook.send({
+          content: transformedContent,
+          username: message.author.username,
+          avatarURL: message.author.displayAvatarURL({ dynamic: true }),
+        });
+        await webhook.send({
+          content: 'https://tenor.com/JJSB.gif',
+          username: message.author.username,
+          avatarURL: message.author.displayAvatarURL({ dynamic: true }),
+        });
         console.log(`Sent video in response to: ${message.content}`);
-      } catch (error) {
-        console.error('Error sending video:', error);
-      }
-    } else if (transformedContent.includes('RICKROLLED')) {
-      try {
-        await message.channel.send(transformedContent);
-        await message.channel.send('https://tenor.com/oGiMOgYKbHS.gif' + '\n https://www.youtube.com/watch?v=dQw4w9WgXcQ');
-      } catch (error) {
-        console.error('Error sending video:', error);
-      }
-    }  else if (message.content !== transformedContent) {
-      // Additional handling if needed
-      try {
-        await message.reply({ content: transformedContent, allowedMentions: { repliedUser: false } });
+      } else if (transformedContent.includes('RICKROLLED')) {
+        await webhook.send({
+          content: transformedContent,
+          username: message.author.username,
+          avatarURL: message.author.displayAvatarURL({ dynamic: true }),
+        });
+        await webhook.send({
+          content: 'https://tenor.com/oGiMOgYKbHS.gif\nhttps://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          username: message.author.username,
+          avatarURL: message.author.displayAvatarURL({ dynamic: true }),
+        });
+      } else if (message.content !== transformedContent) {
+        await message.delete()
+        await webhook.send({
+          content: transformedContent,
+          username: message.author.username,
+          avatarURL: message.author.displayAvatarURL({ dynamic: true }),
+        });
         console.log(`Transformed message: ${transformedContent}`);
-      } catch (error) {
-        console.error('Error sending message:', error);
       }
-    } else {
-      // Additional handling if needed
+    } catch (error) {
+      console.error('Error sending message:', error);
     }
   }
 });
 
-// Replace 'YOUR_BOT_TOKEN' with your actual bot token
 client.login(token);
