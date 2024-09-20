@@ -1,7 +1,5 @@
 //This bot is based off of code found in https://discord.com/channels/603970300668805120/1120579566549860433
-//This bot was further developed by spacexplorer11, his ID is: 1168126408808202273 
-
-import { Client, GatewayIntentBits, Collection } from 'discord.js';
+//This bot was further developed by spacexplorer11, his ID is: 1168126408808202273
 
 const { Collection, Client, GatewayIntentBits } = require('discord.js');
 const { token } = require('/workspaces/Britishifier/Config.json');
@@ -21,22 +19,6 @@ client.commands = new Collection();
 const foldersPath = path.join(__dirname, 'Commands');
 const commandFolders = fs.readdirSync(foldersPath);
 
-for (const folder of commandFolders) {
-  const commandsPath = path.join(foldersPath, folder);
-  if (fs.statSync(commandsPath).isDirectory()) {
-    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
-    for (const file of commandFiles) {
-      const filePath = path.join(commandsPath, file);
-      const command = require(filePath);
-      if ('data' in command && 'execute' in command) {
-        client.commands.set(command.data.name, command);
-      } else {
-        console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
-      }
-    }
-  }
-}
-
 const eventsPath = path.join(__dirname, 'Events');
 const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 
@@ -53,7 +35,7 @@ for (const file of eventFiles) {
 let webhook;
 
 client.on('ready', async () => {
-  const channel = client.channels.cache.get('YOUR_CHANNEL_ID'); // Replace with your channel ID
+  const channel = client.channels.cache.get('1193176550246465659'); // Replace with your channel ID
   if (channel) {
     webhook = await channel.createWebhook({
       name: message.author.username,

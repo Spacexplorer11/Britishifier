@@ -65,7 +65,7 @@ class BaseInteraction extends Base {
      * If this interaction was sent in a guild, the member which sent it
      * @type {?(GuildMember|APIInteractionGuildMember)}
      */
-    this.member = data.member ? this.guild?.members._add(data.member) ?? data.member : null;
+    this.member = data.member ? (this.guild?.members._add(data.member) ?? data.member) : null;
 
     /**
      * The version
@@ -75,9 +75,9 @@ class BaseInteraction extends Base {
 
     /**
      * Set of permissions the application or bot has within the channel the interaction was sent from
-     * @type {?Readonly<PermissionsBitField>}
+     * @type {Readonly<PermissionsBitField>}
      */
-    this.appPermissions = data.app_permissions ? new PermissionsBitField(data.app_permissions).freeze() : null;
+    this.appPermissions = new PermissionsBitField(data.app_permissions).freeze();
 
     /**
      * The permissions of the member, if one exists, in the channel this interaction was executed in
@@ -154,7 +154,7 @@ class BaseInteraction extends Base {
   }
 
   /**
-   * Indicates whether or not this interaction is both cached and received from a guild.
+   * Indicates whether this interaction is received from a cached guild.
    * @returns {boolean}
    */
   inCachedGuild() {
